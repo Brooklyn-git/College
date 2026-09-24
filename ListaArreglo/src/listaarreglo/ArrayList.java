@@ -13,11 +13,6 @@ public class ArrayList<T> implements IList<T>, Iterable<T>{
         nElementos = 0;
         lista = (T[]) java.lang.reflect.Array.newInstance(tipoDato, tamLista);
     }
-
-    @Override
-    public java.util.Iterator<T> iterator() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
     
     private class ListIterator <T> implements Iterator<T>{
         private int actual = 0;
@@ -100,7 +95,7 @@ public class ArrayList<T> implements IList<T>, Iterable<T>{
             throw new ListException("Lista vacia");
         }
         
-        if(index <0 || index > nElementos){
+        if (index < 0 || index >= nElementos) {
             throw new ListException("Indice fuera de limites");
         }
         
@@ -109,7 +104,15 @@ public class ArrayList<T> implements IList<T>, Iterable<T>{
 
     @Override
     public void set(T elemento, int index) throws ListException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        if (empty()) {
+            throw new ListException("Lista vacia");
+        }
+
+        if (index < 0 || index >= nElementos) {
+            throw new ListException("Indice fuera de limites");
+        }
+
+        lista[index] = elemento;
     }
 
     @Override
@@ -128,7 +131,7 @@ public class ArrayList<T> implements IList<T>, Iterable<T>{
     }
 
     @Override
-    public java.util.Iterator<T> Iterator() {
+    public java.util.Iterator<T> iterator() {
         return new ListIterator();
     }
 
