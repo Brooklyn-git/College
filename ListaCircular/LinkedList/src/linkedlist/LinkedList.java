@@ -23,6 +23,15 @@ public class LinkedList {
         System.out.println("Elemento removido: " + materias.remove(0));
         System.out.println("Tamano: " + materias.size());
 
+        materias.irInicio();
+        System.out.println("Desde el inicio, next(): " + materias.next());
+        System.out.println("Siguiente elemento: " + materias.next());
+        System.out.println("next() circular regresa al inicio: " + materias.next());
+
+        materias.irInicio();
+        System.out.println("Desde el inicio, previous(): " + materias.previous());
+        System.out.println("previous() circular regresa al final: " + materias.previous());
+
         ListaEnlazada<String> optativas = new ListaEnlazada<>();
         optativas.append("Redes");
         optativas.append("Sistemas operativos");
@@ -31,6 +40,11 @@ public class LinkedList {
 
         materias.invertir();
         System.out.println("Lista invertida: " + materias);
+        materias.irInicio();
+        System.out.println("Iterador Java (una vuelta):");
+        for (String materia : materias) {
+            System.out.println(materia);
+        }
         materias.clear();
         System.out.println("Despues de clear, esta vacia: " + materias.empty());
     }

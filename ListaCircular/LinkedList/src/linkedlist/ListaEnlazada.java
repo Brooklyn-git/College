@@ -14,45 +14,23 @@ import java.util.Objects;
  */
 public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     protected NodoSimple inicio;
+    protected NodoSimple fin;
     protected int nElementos;
-    
-    public ListaEnlazada(){
-        inicio = null;
-        nElementos = 0;
-    }
+    private NodoSimple cursor;
 
     private class NodoSimple {
         private T dato;
         private NodoSimple sig;
-        
+        private NodoSimple ant;
+
         private NodoSimple(T dato) {
             this.dato = dato;
         }
-        
     }
-    
-   
-    
+
     @Override
     public void append(T elemento) throws ListException {
-        NodoSimple nodoNuevo = new NodoSimple(elemento);
-        NodoSimple nodo = inicio;
-        
-        if (nodo == null) {
-            inicio = nodoNuevo;
-        
-        } else {
-            
-            while (nodo.sig != null) {
-                nodo = nodo.sig;
-            }
-            
-            nodo.sig = nodoNuevo;
-            
-        }
-        
-        nElementos++;
-                
+        insert(elemento, nElementos);
     }
 
     @Override
@@ -61,14 +39,31 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
             throw new ListException("Index out of bounds: " + index);
         }
 
-        NodoSimple nodoNuevo = new NodoSimple(elemento);
-        if (index == 0) {
-            nodoNuevo.sig = inicio;
-            inicio = nodoNuevo;
+        NodoSimple nuevo = new NodoSimple(elemento);
+        if (nElementos == 0) {
+            nuevo.sig = nuevo;
+            nuevo.ant = nuevo;
+            inicio = nuevo;
+            fin = nuevo;
+        } else if (index == 0) {
+            nuevo.sig = inicio;
+            nuevo.ant = fin;
+            inicio.ant = nuevo;
+            fin.sig = nuevo;
+            inicio = nuevo;
+        } else if (index == nElementos) {
+            nuevo.sig = inicio;
+            nuevo.ant = fin;
+            fin.sig = nuevo;
+            inicio.ant = nuevo;
+            fin = nuevo;
         } else {
-            NodoSimple anterior = nodoEn(index - 1);
-            nodoNuevo.sig = anterior.sig;
-            anterior.sig = nodoNuevo;
+            NodoSimple siguiente = nodoEn(index);
+            NodoSimple anterior = siguiente.ant;
+            nuevo.sig = siguiente;
+            nuevo.ant = anterior;
+            anterior.sig = nuevo;
+            siguiente.ant = nuevo;
         }
         nElementos++;
     }
@@ -76,16 +71,28 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     @Override
     public T remove(int index) throws ListException {
         validarIndice(index);
-        NodoSimple eliminado;
-        if (index == 0) {
-            eliminado = inicio;
-            inicio = inicio.sig;
+        NodoSimple eliminado = nodoEn(index);
+
+        if (nElementos == 1) {
+            inicio = null;
+            fin = null;
+            cursor = null;
         } else {
-            NodoSimple anterior = nodoEn(index - 1);
-            eliminado = anterior.sig;
-            anterior.sig = eliminado.sig;
+            eliminado.ant.sig = eliminado.sig;
+            eliminado.sig.ant = eliminado.ant;
+            if (eliminado == inicio) {
+                inicio = eliminado.sig;
+            }
+            if (eliminado == fin) {
+                fin = eliminado.ant;
+            }
+            if (cursor == eliminado) {
+                cursor = eliminado.sig;
+            }
         }
         nElementos--;
+        eliminado.sig = null;
+        eliminado.ant = null;
         return eliminado.dato;
     }
 
@@ -102,10 +109,11 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     @Override
     public int indexOf(T elemento) {
         NodoSimple nodo = inicio;
-        for (int index = 0; nodo != null; index++, nodo = nodo.sig) {
+        for (int index = 0; index < nElementos; index++) {
             if (Objects.equals(nodo.dato, elemento)) {
                 return index;
             }
+            nodo = nodo.sig;
         }
         return -1;
     }
@@ -123,6 +131,8 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     @Override
     public void clear() {
         inicio = null;
+        fin = null;
+        cursor = null;
         nElementos = 0;
     }
 
@@ -137,18 +147,19 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     }
 
     @Override
-    public java.util.Iterator<T> Iterator() {
+    public Iterator<T> Iterator() {
         return iterator();
     }
 
     @Override
-    public java.util.Iterator<T> iterator() {
+    public Iterator<T> iterator() {
         return new Iterator<T>() {
             private NodoSimple siguiente = inicio;
+            private int restantes = nElementos;
 
             @Override
             public boolean hasNext() {
-                return siguiente != null;
+                return restantes > 0;
             }
 
             @Override
@@ -158,21 +169,51 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
                 }
                 T dato = siguiente.dato;
                 siguiente = siguiente.sig;
+                restantes--;
                 return dato;
             }
         };
     }
 
+    public void irInicio() {
+        cursor = inicio;
+    }
+
+    public void irFinal() {
+        cursor = fin;
+    }
+
+    @Override
+    public T next() {
+        validarCursor();
+        T dato = cursor.dato;
+        cursor = cursor.sig;
+        return dato;
+    }
+
+    @Override
+    public T previous() {
+        validarCursor();
+        T dato = cursor.dato;
+        cursor = cursor.ant;
+        return dato;
+    }
+
     public void invertir() {
-        NodoSimple anterior = null;
-        NodoSimple actual = inicio;
-        while (actual != null) {
-            NodoSimple siguiente = actual.sig;
-            actual.sig = anterior;
-            anterior = actual;
-            actual = siguiente;
+        if (nElementos < 2) {
+            return;
         }
-        inicio = anterior;
+
+        NodoSimple nodo = inicio;
+        for (int i = 0; i < nElementos; i++) {
+            NodoSimple siguiente = nodo.sig;
+            nodo.sig = nodo.ant;
+            nodo.ant = siguiente;
+            nodo = siguiente;
+        }
+        NodoSimple anteriorInicio = inicio;
+        inicio = fin;
+        fin = anteriorInicio;
     }
 
     public void concatenar(ListaEnlazada<T> otraLista) {
@@ -189,8 +230,8 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     public String toString() {
         StringBuilder resultado = new StringBuilder("[");
         NodoSimple nodo = inicio;
-        while (nodo != null) {
-            if (nodo != inicio) {
+        for (int i = 0; i < nElementos; i++) {
+            if (i > 0) {
                 resultado.append(", ");
             }
             resultado.append(nodo.dato);
@@ -201,9 +242,16 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
 
     private NodoSimple nodoEn(int index) {
         validarIndice(index);
-        NodoSimple nodo = inicio;
-        for (int i = 0; i < index; i++) {
-            nodo = nodo.sig;
+        if (index <= nElementos / 2) {
+            NodoSimple nodo = inicio;
+            for (int i = 0; i < index; i++) {
+                nodo = nodo.sig;
+            }
+            return nodo;
+        }
+        NodoSimple nodo = fin;
+        for (int i = nElementos - 1; i > index; i--) {
+            nodo = nodo.ant;
         }
         return nodo;
     }
@@ -211,6 +259,12 @@ public class ListaEnlazada<T> implements IList<T>, Iterable<T> {
     private void validarIndice(int index) {
         if (index < 0 || index >= nElementos) {
             throw new ListException("Index out of bounds: " + index);
+        }
+    }
+
+    private void validarCursor() {
+        if (cursor == null) {
+            throw new ListException("La lista esta vacia o el cursor no esta posicionado");
         }
     }
 }

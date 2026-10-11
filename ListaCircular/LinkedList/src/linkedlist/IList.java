@@ -22,5 +22,9 @@ public interface IList<T> {
     public void clear();
     public boolean empty();
     public int size();
+    public void irInicio();
+    public void irFinal();
+    public T next();
+    public T previous();
     public Iterator<T> Iterator();
 }
